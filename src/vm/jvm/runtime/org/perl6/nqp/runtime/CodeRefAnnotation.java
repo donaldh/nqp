@@ -13,6 +13,7 @@ public @interface CodeRefAnnotation
     String[] iLexicalNames() default {};
     String[] nLexicalNames() default {};
     String[] sLexicalNames() default {};
+    LexicalValue[] lexicalValues() default {};
     long[] handlers() default {0};
     boolean hasExitHandler() default false;
     short argsExpectation() default 0;

@@ -22,6 +22,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import static org.perl6.nqp.runtime.Ops.*;
+
+import org.perl6.nqp.jast2bc.JastMethod.JastLexValue;
 import org.perl6.nqp.runtime.ThreadContext;
 
 import org.perl6.nqp.sixmodel.SixModelObject;
@@ -179,6 +181,19 @@ public class JASTCompiler {
                 avLex = av.visitArray("sLexicalNames");
                 for (int i = 0; i < method.crSlex.size(); i++)
                     avLex.visit(null, method.crSlex.get(i));
+                avLex.visitEnd();
+            }
+            if (method.crLexValues.size() > 0) {
+                Type lexAnnType = Type.getType("Lorg/perl6/nqp/runtime/LexicalValue;");
+                avLex = av.visitArray("lexicalValues");
+                for (JastLexValue v : method.crLexValues) {
+                    AnnotationVisitor lv = avLex.visitAnnotation("lexicalValues", lexAnnType.getDescriptor());
+                    lv.visit("name", v.name);
+                    lv.visit("sc", v.scId);
+                    lv.visit("index", v.index);
+                    lv.visit("flags", v.flags);
+                    lv.visitEnd();
+                }
                 avLex.visitEnd();
             }
 

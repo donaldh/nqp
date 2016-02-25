@@ -9,6 +9,8 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 
 import static org.perl6.nqp.runtime.Ops.*;
+
+import org.perl6.nqp.runtime.Ops;
 import org.perl6.nqp.runtime.ThreadContext;
 
 import static org.perl6.nqp.jast2bc.JASTCompiler.processType;
@@ -31,6 +33,7 @@ public class JastMethod {
     public List<String> crIlex = new ArrayList<String>();
     public List<String> crNlex = new ArrayList<String>();
     public List<String> crSlex = new ArrayList<String>();
+    public List<JastLexValue> crLexValues = new ArrayList<JastLexValue>();
     public long[] crHandlers;
     public boolean hasExitHandler = false;
     public short argsExpectation = 0;
@@ -38,6 +41,16 @@ public class JastMethod {
 
     Label beginAll, endAll;
     Map<String, LabelInfo> labels = new HashMap<String, LabelInfo>();
+
+    public static class JastLexValue {
+        public String name;
+        public String scId;
+        public int index;
+        public int flags;
+        public JastLexValue(String name, String scId, int index, int flags) {
+            this.name = name; this.scId = scId; this.index = index; this.flags = flags;
+        }
+    }
 
     public JastMethod(SixModelObject jast, SixModelObject jastMethod, ThreadContext tc) throws Exception {
         if (istype(jast, jastMethod, tc) == 0)
@@ -88,6 +101,21 @@ public class JastMethod {
         fillList(crNlex, getattr(jast, jastMethod, "@!cr_nlex", crNlexHint, tc), tc);
         fillList(crSlex, getattr(jast, jastMethod, "@!cr_slex", crSlexHint, tc), tc);
 
+        SixModelObject lexValuesList = getattr(jast, jastMethod, "@!cr_lex_values", crLexValuesHint, tc);
+        iter = iter(lexValuesList, tc);
+        while (istrue(iter, tc) != 0) {
+            SixModelObject lexList = iter.shift_boxed(tc);
+            String name = lexList.at_pos_boxed(tc, 0).get_str(tc);
+            SixModelObject value = lexList.at_pos_boxed(tc, 1);
+            long flags = lexList.at_pos_boxed(tc, 2).get_int(tc);
+            
+            SixModelObject sc = Ops.getobjsc(value, tc);
+            String scId = Ops.scgethandle(sc, tc);
+            long objIdx = Ops.scgetobjidx(sc, value, tc);
+            
+            crLexValues.add(new JastLexValue(name, scId, (int) objIdx, (int) flags));
+        }
+
         SixModelObject handlersList = getattr(jast, jastMethod, "@!cr_handlers", crHandlersHint, tc);
         iter = iter(handlersList, tc);
         crHandlers = new long[(int) elems(handlersList, tc)];
@@ -113,7 +141,7 @@ public class JastMethod {
 
     private static long nameHint, staticHint, returnsHint, argumentsHint,
             localsHint, instructionsHint, crNameHint, crCuidHint, crOuterHint,
-            crOlexHint, crIlexHint, crNlexHint, crSlexHint, crHandlersHint,
+            crOlexHint, crIlexHint, crNlexHint, crSlexHint, crLexValuesHint, crHandlersHint,
             hasExitHandlerHint, argsExpectationHint, isThunkHint;
     public static void setup(SixModelObject jastMethod, ThreadContext tc) {
         nameHint            = jastMethod.st.REPR.hint_for(tc, jastMethod.st, jastMethod, "$!name");
@@ -129,6 +157,7 @@ public class JastMethod {
         crIlexHint          = jastMethod.st.REPR.hint_for(tc, jastMethod.st, jastMethod, "@!cr_ilex");
         crNlexHint          = jastMethod.st.REPR.hint_for(tc, jastMethod.st, jastMethod, "@!cr_nlex");
         crSlexHint          = jastMethod.st.REPR.hint_for(tc, jastMethod.st, jastMethod, "@!cr_slex");
+        crLexValuesHint     = jastMethod.st.REPR.hint_for(tc, jastMethod.st, jastMethod, "@!cr_lex_values");
         crHandlersHint      = jastMethod.st.REPR.hint_for(tc, jastMethod.st, jastMethod, "@!cr_handlers");
         hasExitHandlerHint  = jastMethod.st.REPR.hint_for(tc, jastMethod.st, jastMethod, "$!has_exit_handler");
         argsExpectationHint = jastMethod.st.REPR.hint_for(tc, jastMethod.st, jastMethod, "$!args_expectation");

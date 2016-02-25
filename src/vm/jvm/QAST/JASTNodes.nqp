@@ -115,6 +115,7 @@ class JAST::Method is JAST::Node {
     has @!cr_ilex;
     has @!cr_nlex;
     has @!cr_slex;
+    has @!cr_lex_values;
     has @!cr_handlers;
     has int $!has_exit_handler;
     has int $!args_expectation;
@@ -134,6 +135,7 @@ class JAST::Method is JAST::Node {
         @!cr_ilex := [];
         @!cr_nlex := [];
         @!cr_slex := [];
+        @!cr_lex_values := [];
         @!cr_handlers := [];
     }
     
@@ -164,6 +166,7 @@ class JAST::Method is JAST::Node {
     method cr_ilex(*@value) { @value ?? (@!cr_ilex := @value[0]) !! @!cr_ilex }
     method cr_nlex(*@value) { @value ?? (@!cr_nlex := @value[0]) !! @!cr_nlex }
     method cr_slex(*@value) { @value ?? (@!cr_slex := @value[0]) !! @!cr_slex }
+    method cr_lex_values(*@value) { @value ?? (@!cr_lex_values := @value[0]) !! @!cr_lex_values }
     method cr_handlers(*@value) { @value ?? (@!cr_handlers := @value[0]) !! @!cr_handlers }
     method has_exit_handler(*@value) { $!has_exit_handler := @value[0] if @value; $!has_exit_handler }
     method args_expectation(*@value) { $!args_expectation := @value[0] if @value; $!args_expectation }
@@ -189,6 +192,7 @@ class JAST::Method is JAST::Node {
         for @!cr_ilex { nqp::push(@dumped, "++ ilex $_"); }
         for @!cr_nlex { nqp::push(@dumped, "++ nlex $_"); }
         for @!cr_slex { nqp::push(@dumped, "++ slex $_"); }
+        for @!cr_lex_values { nqp::push(@dumped, "++ lex_value $_"); }
         nqp::push(@dumped, "++ handlers " ~ join(' ', @!cr_handlers));
         if $!has_exit_handler {
             nqp::push(@dumped, "++ has_exit_handler");
