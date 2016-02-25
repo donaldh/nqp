@@ -95,6 +95,7 @@ public abstract class CompilationUnit {
             cr.staticInfo.methodName = m.methodName;
             cr.staticInfo.hasExitHandler = ann.hasExitHandler();
             cr.staticInfo.isThunk = ann.isThunk();
+            cr.staticInfo.oLexValues = ann.lexicalValues();
             cr.st = BOOTCodeSTable;
             codeRefList.add(cr);
 
@@ -145,6 +146,18 @@ public abstract class CompilationUnit {
             catch (Exception e) {
                 throw ExceptionHandling.dieInternal(tc, e.toString());
             }
+    }
+    
+    public void postDeserialize(ThreadContext tc) {
+        for (CodeRef cr : codeRefs) {
+            for (LexicalValue v : cr.staticInfo.oLexValues) {
+                Integer idx = cr.staticInfo.oTryGetLexicalIdx(v.name());
+                if (idx == null)
+                    new RuntimeException("Invalid lexical name '" + v.name() + "' in static lexical installation");
+                cr.staticInfo.oLexStatic[idx] = tc.gc.scs.get(v.sc()).getObject(v.index());
+                cr.staticInfo.oLexStaticFlags[idx] = (byte) v.flags();
+            }
+        }
     }
 
     private static class ReflectiveCodeInfo {

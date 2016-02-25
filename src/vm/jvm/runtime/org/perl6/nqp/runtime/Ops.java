@@ -4682,6 +4682,8 @@ public final class Ops {
             SerializationReader sr = new SerializationReader(
                     tc, sc, shArray, crArray, crCount, binaryBlob);
             sr.deserialize();
+            
+            cu.postDeserialize(tc);
 
             return blob;
         }

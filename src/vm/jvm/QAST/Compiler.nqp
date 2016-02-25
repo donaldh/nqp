@@ -2895,6 +2895,7 @@ class QAST::CompilerJAST {
         has %!lexicalref_types; # Mapping of lexical names to types
         has %!lexical_idxs;     # Lexical indexes (but have to know type too)
         has @!lexical_names;    # List by type of lexial name lists
+        has @!lexical_values;   # List of lexical value tuples
         has int $!num_save_sites;   # Count of points where a SaveStackException handler is needed
         has %!local2temp;       # Maps local names to temporarization info
         
@@ -2915,6 +2916,7 @@ class QAST::CompilerJAST {
             %!lexical_idxs := nqp::hash();
             %!local2temp := nqp::hash();
             @!lexical_names := nqp::list([],[],[],[]);
+            @!lexical_values := nqp::list();
         }
         
         method add_param($var) {
@@ -2930,13 +2932,14 @@ class QAST::CompilerJAST {
         method add_lexical($var, :$is_static, :$is_cont, :$is_state) {
             self.register_lexical($var);
             if $is_static || $is_cont || $is_state {
-                my %blv := %*BLOCK_LEX_VALUES;
-                unless nqp::existskey(%blv, $!qast.cuid) {
-                    %blv{$!qast.cuid} := [];
-                }
+#                my %blv := %*BLOCK_LEX_VALUES;
+#                unless nqp::existskey(%blv, $!qast.cuid) {
+#                    %blv{$!qast.cuid} := [];
+#                }
                 my $flags := $is_static ?? 0 !!
                              $is_cont   ?? 1 !! 2;
-                nqp::push(%blv{$!qast.cuid}, [$var.name, $var.value, $flags]);
+#                nqp::push(%blv{$!qast.cuid}, [$var.name, $var.value, $flags]);
+                nqp::push(@!lexical_values, [$var.name, $var.value, $flags]);
             }
         }
 
@@ -3024,6 +3027,7 @@ class QAST::CompilerJAST {
         method lexicalref_type($name) { %!lexicalref_types{$name} }
         method lexical_idx($name) { %!lexical_idxs{$name} }
         method lexical_names_by_type() { @!lexical_names }
+        method lexical_values() { @!lexical_values }
     }
     
     my class BlockTempAlloc {
@@ -3400,7 +3404,7 @@ class QAST::CompilerJAST {
                 }
             }
             $block.push($cur_pd_block);
-            
+
             # Compile to JAST and register this block as the deserialization
             # handler.
             self.as_jast($block);
@@ -3705,6 +3709,7 @@ class QAST::CompilerJAST {
             $*JMETH.cr_ilex(@lex_names[$RT_INT]);
             $*JMETH.cr_nlex(@lex_names[$RT_NUM]);
             $*JMETH.cr_slex(@lex_names[$RT_STR]);
+            $*JMETH.cr_lex_values($block.lexical_values);
             
             # If we have custom args processing, we always take an args array.
             my $il := JAST::InstructionList.new();

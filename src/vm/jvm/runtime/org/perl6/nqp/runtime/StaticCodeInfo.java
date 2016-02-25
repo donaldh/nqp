@@ -48,6 +48,8 @@ public class StaticCodeInfo implements Cloneable {
      */
     public CallFrame priorInvocation;
 
+    public LexicalValue[] oLexValues;
+    
     /**
      * Static lexicals.
      */
