@@ -53,12 +53,12 @@ public class StaticCodeInfo implements Cloneable {
     /**
      * Static lexicals.
      */
-    public SixModelObject[] oLexStatic;
+    private SixModelObject[] oLexStatic;
     
     /**
      * Flags for each static lexical usage.
      */
-    public byte[] oLexStaticFlags;
+    private byte[] oLexStaticFlags;
     
     /**
      * Names of the lexicals we have of each of the base types.
@@ -96,7 +96,37 @@ public class StaticCodeInfo implements Cloneable {
      * Is this code object marked as a thunk?
      */
     public boolean isThunk;
-    
+
+    protected void initOLexStatic(ThreadContext tc) {
+        oLexStatic = new SixModelObject[oLexicalNames.length];
+        oLexStaticFlags = new byte[oLexicalNames.length];
+
+        for (LexicalValue v : oLexValues) {
+            Integer idx = oTryGetLexicalIdx(v.name());
+            if (idx == null)
+                throw new RuntimeException("Invalid lexical name '" + v.name() + "' during static lexical installation");
+            SixModelObject lex = tc.gc.scs.get(v.sc()).getObject(v.index());
+            if (lex == null)
+                throw new RuntimeException("Cannot find object for lexical name '" + v.name() + "' during static lexical installation");
+            oLexStatic[idx] = lex;
+            oLexStaticFlags[idx] = v.flags();
+        }
+    }
+
+    public SixModelObject[] oLexStatic(ThreadContext tc) {
+        if (oLexStatic == null && oLexicalNames != null) {
+            initOLexStatic(tc);
+        }
+        return oLexStatic;
+    }
+
+    public byte[] oLexStaticFlags(ThreadContext tc) {
+        if (oLexStatic == null && oLexValues.length > 0) {
+            initOLexStatic(tc);
+        }
+        return oLexStaticFlags;
+    }
+
     public Integer oTryGetLexicalIdx(String name) {
         if (oLexicalNames != null) {
             if (oLexicalMap == null) {
@@ -171,10 +201,6 @@ public class StaticCodeInfo implements Cloneable {
         this.sLexicalNames = sLexicalNames;
         this.handlers = handlers;
         this.staticCode = staticCode;
-        if (oLexicalNames != null) {
-            this.oLexStatic = new SixModelObject[oLexicalNames.length];
-            this.oLexStaticFlags = new byte[oLexicalNames.length];
-        }
         this.argsExpectation = argsExpectation;
         MethodType t = mh.type();
         if (t.parameterCount() == 5 && (t.parameterType(4) == ResumeStatus.Frame.class)) {

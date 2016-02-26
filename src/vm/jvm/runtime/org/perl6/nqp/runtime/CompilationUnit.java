@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.perl6.nqp.sixmodel.STable;
+import org.perl6.nqp.sixmodel.SixModelObject;
 
 /**
  * All compilation units inherit from this class. A compilation unit contains
@@ -149,15 +150,18 @@ public abstract class CompilationUnit {
     }
     
     public void postDeserialize(ThreadContext tc) {
-        for (CodeRef cr : codeRefs) {
-            for (LexicalValue v : cr.staticInfo.oLexValues) {
-                Integer idx = cr.staticInfo.oTryGetLexicalIdx(v.name());
-                if (idx == null)
-                    new RuntimeException("Invalid lexical name '" + v.name() + "' in static lexical installation");
-                cr.staticInfo.oLexStatic[idx] = tc.gc.scs.get(v.sc()).getObject(v.index());
-                cr.staticInfo.oLexStaticFlags[idx] = (byte) v.flags();
-            }
-        }
+//        for (CodeRef cr : codeRefs) {
+//            for (LexicalValue v : cr.staticInfo.oLexValues) {
+//                Integer idx = cr.staticInfo.oTryGetLexicalIdx(v.name());
+//                if (idx == null)
+//                    throw new RuntimeException("Invalid lexical name '" + v.name() + "' during static lexical installation");
+//                SixModelObject o = tc.gc.scs.get(v.sc()).getObject(v.index());
+//                if (o == null)
+//                	throw new RuntimeException("Cannot find object for lexical name '" + v.name() + "' during static lexical installation");
+//                cr.staticInfo.oLexStatic[idx] = o;
+//                cr.staticInfo.oLexStaticFlags[idx] = (byte) v.flags();
+//            }
+//        }
     }
 
     private static class ReflectiveCodeInfo {
@@ -261,6 +265,9 @@ public abstract class CompilationUnit {
     }
 
     private void setLexValues(ThreadContext tc, CodeRef cr, String toParse) {
+        SixModelObject[] oLexStatic = cr.staticInfo.oLexStatic(tc);
+        byte[] oLexStaticFlags = cr.staticInfo.oLexStaticFlags(tc);
+
         String[] bits = toParse.split("\\x00");
         for (int i = 0; i < bits.length; i += 4) {
             String lexName = bits[i];
@@ -270,8 +277,8 @@ public abstract class CompilationUnit {
             Integer idx = cr.staticInfo.oTryGetLexicalIdx(lexName);
             if (idx == null)
                 new RuntimeException("Invalid lexical name '" + lexName + "' in static lexical installation");
-            cr.staticInfo.oLexStatic[idx] = tc.gc.scs.get(handle).getObject(scIdx);
-            cr.staticInfo.oLexStaticFlags[idx] = (byte)flags;
+            oLexStatic[idx] = tc.gc.scs.get(handle).getObject(scIdx);
+            oLexStaticFlags[idx] = (byte)flags;
         }
      }
 

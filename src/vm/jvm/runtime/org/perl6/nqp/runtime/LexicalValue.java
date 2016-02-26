@@ -4,5 +4,5 @@ public @interface LexicalValue {
 	String name();
 	String sc();
 	int index();
-	int flags();
+	byte flags();
 }

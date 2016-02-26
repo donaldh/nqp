@@ -135,23 +135,25 @@ public class CallFrame implements Cloneable {
         
         // Set up lexical storage.
         if (sci.oLexicalNames != null) {
-            int numoLex = sci.oLexStatic.length;
+            SixModelObject[] oLexStatic = sci.oLexStatic(tc);
+            byte[] oLexStaticFlags = sci.oLexStaticFlags(tc);
+            int numoLex = oLexStatic.length;
             this.oLex = new SixModelObject[numoLex];
             for (int i = 0; i < numoLex; i++) {
-                switch (sci.oLexStaticFlags[i]) {
+                switch (oLexStaticFlags[i]) {
                 case 0:
-                    this.oLex[i] = sci.oLexStatic[i];
+                    this.oLex[i] = oLexStatic[i];
                     break;
                 case 1:
-                    this.oLex[i] = sci.oLexStatic[i].clone(tc);
+                    this.oLex[i] = oLexStatic[i].clone(tc);
                     break;
                 case 2:
                     if (cr.oLexState == null) {
-                        cr.oLexState = new SixModelObject[sci.oLexStatic.length];
+                        cr.oLexState = new SixModelObject[oLexStatic.length];
                         this.stateInit = true;
                     }
                     if (cr.oLexState[i] == null)
-                        this.oLex[i] = cr.oLexState[i] = sci.oLexStatic[i].clone(tc);
+                        this.oLex[i] = cr.oLexState[i] = oLexStatic[i].clone(tc);
                     else
                         this.oLex[i] = cr.oLexState[i];
                     break;
@@ -207,7 +209,7 @@ public class CallFrame implements Cloneable {
         
         // Set up lexical storage.
         if (sci.oLexicalNames != null)
-            this.oLex = sci.oLexStatic.clone();
+            this.oLex = sci.oLexStatic(tc).clone();
         if (sci.iLexicalNames != null)
             this.iLex = new long[sci.iLexicalNames.length];
         if (sci.nLexicalNames != null)

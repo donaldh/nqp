@@ -46,8 +46,8 @@ public class JastMethod {
         public String name;
         public String scId;
         public int index;
-        public int flags;
-        public JastLexValue(String name, String scId, int index, int flags) {
+        public byte flags;
+        public JastLexValue(String name, String scId, int index, byte flags) {
             this.name = name; this.scId = scId; this.index = index; this.flags = flags;
         }
     }
@@ -113,7 +113,7 @@ public class JastMethod {
             String scId = Ops.scgethandle(sc, tc);
             long objIdx = Ops.scgetobjidx(sc, value, tc);
             
-            crLexValues.add(new JastLexValue(name, scId, (int) objIdx, (int) flags));
+            crLexValues.add(new JastLexValue(name, scId, (int) objIdx, (byte) flags));
         }
 
         SixModelObject handlersList = getattr(jast, jastMethod, "@!cr_handlers", crHandlersHint, tc);
