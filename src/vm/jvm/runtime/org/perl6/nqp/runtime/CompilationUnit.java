@@ -148,20 +148,8 @@ public abstract class CompilationUnit {
                 throw ExceptionHandling.dieInternal(tc, e.toString());
             }
     }
-    
+
     public void postDeserialize(ThreadContext tc) {
-//        for (CodeRef cr : codeRefs) {
-//            for (LexicalValue v : cr.staticInfo.oLexValues) {
-//                Integer idx = cr.staticInfo.oTryGetLexicalIdx(v.name());
-//                if (idx == null)
-//                    throw new RuntimeException("Invalid lexical name '" + v.name() + "' during static lexical installation");
-//                SixModelObject o = tc.gc.scs.get(v.sc()).getObject(v.index());
-//                if (o == null)
-//                	throw new RuntimeException("Cannot find object for lexical name '" + v.name() + "' during static lexical installation");
-//                cr.staticInfo.oLexStatic[idx] = o;
-//                cr.staticInfo.oLexStaticFlags[idx] = (byte) v.flags();
-//            }
-//        }
     }
 
     private static class ReflectiveCodeInfo {

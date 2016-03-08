@@ -113,7 +113,11 @@ public class JastMethod {
             String scId = Ops.scgethandle(sc, tc);
             long objIdx = Ops.scgetobjidx(sc, value, tc);
             
+<<<<<<< HEAD
             crLexValues.add(new JastLexValue(name, scId, (int) objIdx, (byte) flags));
+=======
+            crLexValues.add(new JastLexValue(name, scId, (int) objIdx, (int) flags));
+>>>>>>> 5eb31a681d31afa6e1239516bedeb582e52e87e7
         }
 
         SixModelObject handlersList = getattr(jast, jastMethod, "@!cr_handlers", crHandlersHint, tc);
