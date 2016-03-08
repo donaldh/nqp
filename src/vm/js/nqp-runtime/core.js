@@ -15,6 +15,8 @@ var hll = require('./hll.js');
 
 var NQPArray = require('./array.js');
 
+var bootstrap = require('./bootstrap.js');
+
 exports.CodeRef = CodeRef;
 
 op.atpos = function(array, index) {
@@ -72,7 +74,7 @@ function radix_helper(radix, str, zpos, flags) {
   if (flags & 0x04) number = number.replace(/0+$/, '');
   var power = number[0] == '-' ? number.length - 1 : number.length;
   return {power: power, offset: zpos + search[0].length, number: number};
-};
+}
 
 exports.radix_helper = radix_helper;
 
@@ -345,14 +347,14 @@ op.reprname = function(obj) {
   if (obj._STable) {
     return obj._STable.REPR.name;
   } else if (obj instanceof NQPInt) {
-    return "P6int";
-  } else if (typeof obj == "string") {
-    return "P6str";
-  } else if (typeof obj == "number") {
-    return "P6num";
+    return 'P6int';
+  } else if (typeof obj == 'string') {
+    return 'P6str';
+  } else if (typeof obj == 'number') {
+    return 'P6num';
   } else {
     console.log(obj);
-    throw new Error("unsupported thing passed to reprname");
+    throw new Error('unsupported thing passed to reprname');
   }
 };
 
@@ -518,20 +520,20 @@ function WrappedFunction(func) {
 }
 
 WrappedFunction.prototype.$apply = function(args) {
-  var converted = []; 
+  var converted = [];
   for (var i = 2; i < args.length; i++) {
     converted.push(toJS(args[i]));
   }
   return fromJS(this.func.apply(null, converted));
-}
+};
 
 WrappedFunction.prototype.$call = function(args) {
   return this.$apply(arguments);
-}
+};
 
 function fromJS(obj) {
   if (typeof obj === 'function') {
-    return new WrappedFunction(obj);       
+    return new WrappedFunction(obj);
   } else {
     return obj;
   }
@@ -542,7 +544,7 @@ function toJS(obj) {
     return obj.value;
   } else if (obj instanceof CodeRef) {
     return function() {
-      var converted = [null, {}]; 
+      var converted = [null, {}];
       for (var i = 0; i < arguments.length; i++) {
         converted.push(fromJS(arguments[i]));
       }
@@ -592,6 +594,18 @@ op.getmessage = function(exception) {
   return exception.message;
 };
 
+op.setmessage = function(exception, message) {
+  return (exception.message = message);
+};
+
+op.getpayload = function(exception) {
+  return exception.payload;
+};
+
+op.setpayload = function(exception, payload) {
+  return (exception.payload = payload);
+};
+
 op.unshift = function(target, value) {
   if (target.$$unshift) return target.$$unshift(value);
   target.unshift(value);
@@ -614,7 +628,7 @@ op.shift = function(target, value) {
 };
 
 op.isnum = function(value) {
-  return (typeof value == "number") ? 1 : 0;
+  return (typeof value == 'number') ? 1 : 0;
 };
 
 op.isint = function(value) {
@@ -633,7 +647,7 @@ function byteSize(buf) {
   var bits = buf._STable.REPR.type._STable.REPR.bits;
 
   if (bits % 8) {
-    throw "only buffer sizes that are a multiple of 8 are supported";
+    throw 'only buffer sizes that are a multiple of 8 are supported';
   }
 
   return bits / 8;
@@ -652,7 +666,7 @@ op.encode = function(str, encoding_, buf) {
   var buffer = new Buffer(str, encoding);
 
   var offset = 0;
-  for (var i=0; i < buffer.length / elementSize; i++) {
+  for (var i = 0; i < buffer.length / elementSize; i++) {
     ret[i] = buffer.readIntLE(offset, elementSize);
     offset += elementSize;
   }
@@ -665,13 +679,13 @@ op.encode = function(str, encoding_, buf) {
 op.decode = function(buf, encoding_) {
   var encoding = renameEncoding(encoding_);
   var elementSize = byteSize(buf);
-  
+
   buf = buf.array;
 
   var buffer = new Buffer(buf.length * elementSize);
 
   var offset = 0;
-  for (var i=0; i < buf.length; i++) {
+  for (var i = 0; i < buf.length; i++) {
     buffer.writeIntLE(buf[i], offset, elementSize);
     offset += elementSize;
   }
@@ -688,10 +702,10 @@ op.setparameterizer = function(ctx, type, parameterizer) {
   var st = type._STable;
   /* Ensure that the type is not already parametric or parameterized. */
   if (st.parameterizer) {
-    ctx.die("This type is already parametric");
+    ctx.die('This type is already parametric');
     return null;
   } else if (st.parametricType) {
-    ctx.die("Cannot make a parameterized type also be parametric");
+    ctx.die('Cannot make a parameterized type also be parametric');
     return null;
   }
 
@@ -706,7 +720,7 @@ op.parameterizetype = function(ctx, type, params) {
   /* Ensure we have a parametric type. */
   var st = type._STable;
   if (!st.parameterizer) {
-    ctx.die("This type is not parametric");
+    ctx.die('This type is not parametric');
   }
 
   var unpackedParams = params.array;
@@ -715,7 +729,7 @@ op.parameterizetype = function(ctx, type, params) {
   for (var i = 0; i < lookup.length; i++) {
     if (unpackedParams.length == lookup[i].params.length) {
       var match = true;
-      for (var j=0; j < unpackedParams.length; j++) {
+      for (var j = 0; j < unpackedParams.length; j++) {
         /* XXX More cases to consider here. - copied over from the jvm backend, need to consider what they are*/
         if (unpackedParams[j] != lookup[i].params[j]) {
           match = false;
@@ -766,7 +780,7 @@ op.isnanorinf = function(n) {
 function typeparameters(ctx, type) {
   var st = type._STable;
   if (!st.parametricType) {
-    ctx.die("This type is not parameterized");
+    ctx.die('This type is not parameterized');
   }
 
   return st.parameters;
@@ -789,7 +803,7 @@ function startTrampoline(thunk_) {
   while (thunk) {
     thunk = thunk();
   }
-};
+}
 
 var resetValue;
 var invokeValue;
@@ -805,7 +819,7 @@ op.continuationreset = function(ctx, tag, continuation) {
 };
 
 op.continuationresetCPS = function(ctx, tag, continuation, continuation) {
-  console.log("continuation reset in CPS mode");
+  console.log('continuation reset in CPS mode');
 };
 
 op.continuationcontrolCPS = function(ctx, protect, tag, run, cont) {
@@ -927,24 +941,31 @@ op.setdimensions = function(array, dimensions) {
   op['atposnd' + type] = function(array, idx) {
     return array['$$atposnd' + type](idx);
   };
-  
+
   op['bindposnd' + type] = function(array, idx, value) {
     return array['$$bindposnd' + type](idx, value);
   };
-  
+
   op['atpos2d' + type] = function(array, x, y) {
     return op['atposnd' + type](array, new NQPArray([x, y]));
   };
-  
+
   op['atpos3d' + type] = function(array, x, y, z) {
     return op['atposnd' + type](array, new NQPArray([x, y, z]));
   };
-  
+
   op['bindpos2d' + type] = function(array, x, y, value) {
     return op['bindposnd' + type](array, new NQPArray([x, y]), value);
   };
-  
+
   op['bindpos3d' + type] = function(array, x, y, z, value) {
     return op['bindposnd' + type](array, new NQPArray([x, y, z]), value);
   };
 });
+
+var BOOTException = bootstrap.bootType('BOOTException', 'VMException');
+/* TODO HLL support */
+op.newexception = function() {
+  var exType = BOOTException;
+  return exType._STable.REPR.allocate(exType._STable);
+};

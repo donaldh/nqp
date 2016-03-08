@@ -710,7 +710,12 @@ my class MASTCompilerInstance {
         'getattrref_n',
         'getattrref_n',
         'getattrref_s',
-        ''
+        '', '',  '',  '',  '',  '',  '',  '',  '',
+        # XXX Want a getattrref_u in the end
+        'getattrref_i',
+        'getattrref_i',
+        'getattrref_i',
+        'getattrref_i'
     ];
 
     my @kind_to_op_slot := [
@@ -1876,6 +1881,11 @@ my class MASTCompilerInstance {
             }
             elsif $kind == $MVM_reg_int32 || $kind == $MVM_reg_int16 ||
                     $kind == $MVM_reg_int8 {
+                $kind := $MVM_reg_int64;
+            }
+            elsif $kind == $MVM_reg_uint64 || $kind == $MVM_reg_uint32 ||
+                    $kind == $MVM_reg_uint16 || $kind == $MVM_reg_uint8 {
+                # For now compile as signed
                 $kind := $MVM_reg_int64;
             }
             if $*BINDVAL {
